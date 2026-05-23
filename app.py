@@ -33,7 +33,7 @@ if st.button("CV'yi Analiz Et ✨"):
             komut = f"İş Tanımı: {is_tanimi}\n\nCV Metni: {cv_metni}\n\nYukarıdaki bilgilere göre bir CV analiz raporu oluştur. Uygunluk skoru, güçlü yönler, eksik yönler ve gelişim tavsiyelerini açıkla."
             
             # 4. Modeli Başlatma ve Yanıt Alma
-            model = genai.GenerativeModel(model_name='gemini-2.0-flash')
+            model = genai.GenerativeModel(model_name='gemini-1.5-flash-8b')
             cevap = model.generate_content(komut)
             
             st.success("Analiz Tamamlandı!")
