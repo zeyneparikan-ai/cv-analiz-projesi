@@ -1,6 +1,6 @@
 import streamlit as st
 from pypdf import PdfReader
-import google.generativeai as genai
+from openai import OpenAI
 
 st.set_page_config(page_title="Yapay Zeka Destekli CV Analizörü", layout="centered")
 
@@ -13,11 +13,11 @@ yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin", type=["pd
 if st.button("CV'yi Analiz Et ✨"):
     if is_tanimi and yuklenen_dosya:
         try:
-            if "GEMINI_API_KEY" not in st.secrets:
+            if "OPENAI_API_KEY" not in st.secrets:
                 st.error("API Anahtarı bulunamadı!")
                 st.stop()
 
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
             pdf_okuyucu = PdfReader(yuklenen_dosya)
             cv_metni = ""
@@ -26,12 +26,15 @@ if st.button("CV'yi Analiz Et ✨"):
 
             komut = f"İş Tanımı: {is_tanimi}\n\nCV Metni: {cv_metni}\n\nYukarıdaki bilgilere göre bir CV analiz raporu oluştur. Uygunluk skoru, güçlü yönler, eksik yönler ve gelişim tavsiyelerini açıkla."
 
-            model = genai.GenerativeModel(model_name='gemini-2.0-flash')
-            cevap = model.generate_content(komut)
+            cevap = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": komut}],
+                max_tokens=1000
+            )
 
             st.success("Analiz Tamamlandı!")
             st.markdown("### 📄 Yapay Zeka Analiz Raporu")
-            st.write(cevap.text)
+            st.write(cevap.choices[0].message.content)
 
         except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
