@@ -20,10 +20,14 @@ if yuklenen_dosya and is_tanimi:
                 cv_metni = ""
                 for sayfa in pdf_okuyucu.pages:
                     metin = sayfa.extract_text() or ""
-                    cv_metni += metin + "\n"  # Sayfa geçişlerinde boşluk bırakıyoruz
+                    cv_metni += metin + "\n"
+                
+                # Karakter encoding sorunlarını önlemek için güvenli temizlik
+                cv_metni = cv_metni.encode("utf-8", errors="ignore").decode("utf-8")
+                is_tanimi_temiz = is_tanimi.encode("utf-8", errors="ignore").decode("utf-8")
                 
                 # 2. Prompt (Komut) Hazırlama
-                komut = f"Job Description: {is_tanimi}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis"
+                komut = f"Job Description: {is_tanimi_temiz}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis"
                 
                 # 3. API Payload Yapılandırması
                 payload = {
@@ -32,8 +36,10 @@ if yuklenen_dosya and is_tanimi:
                     "max_tokens": 1000
                 }
                 
-                # 4. API Anahtarı Temizliği (Latin-1/Türkçe karakter hatasını önlemek için)
+                # 4. API Anahtarı Temizliği
                 hf_token = str(st.secrets["HF_TOKEN"]).strip()
+                # Token içindeki olası görünmez karakterleri ve tırnakları tamamen temizle
+                hf_token = hf_token.replace('"', '').replace("'", "")
                 
                 headers = {
                     "Authorization": f"Bearer {hf_token}"
@@ -43,7 +49,7 @@ if yuklenen_dosya and is_tanimi:
                 response = requests.post(
                     "https://router.huggingface.co/v1/chat/completions",
                     headers=headers,
-                    json=payload  # Veriyi güvenli JSON formatında gönderiyoruz
+                    json=payload
                 )
                 
                 # 6. Yanıtı Ekrana Yazdırma
