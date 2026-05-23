@@ -38,4 +38,4 @@ if st.button("CV'yi Analiz Et"):
                 max_tokens=1000
             )
 
-            st.success("Analiz
+            st.success("Analiz Tamamlandi!")
