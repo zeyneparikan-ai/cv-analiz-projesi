@@ -1,6 +1,6 @@
 import streamlit as st
 from pypdf import PdfReader
-from huggingface_hub import InferenceClient
+import requests
 
 st.set_page_config(page_title="CV Analizoru", layout="centered")
 st.title("Yapay Zeka Destekli CV Analizoru")
@@ -10,35 +10,36 @@ is_tanimi = st.text_area("Is Tanimi:")
 yuklenen_dosya = st.file_uploader("CV'nizi PDF olarak yukleyin", type=["pdf"])
 
 if st.button("Analiz Et"):
-    if is_tanimi and yuklenen_dosya:
+    if is_tanimi and yuklened_dosya:
         try:
             if "HF_TOKEN" not in st.secrets:
                 st.error("API Anahtari bulunamadi!")
                 st.stop()
 
-            client = InferenceClient(
-                provider="novita",
-                api_key=st.secrets["HF_TOKEN"]
-            )
-
-            pdf_okuyucu = PdfReader(yuklenen_dosya)
+            pdf_okuyucu = PdfReader(yuklened_dosya)
             cv_metni = ""
             for sayfa in pdf_okuyucu.pages:
-                metin = sayfa.extract_text() or ""
-                cv_metni += metin.encode("utf-8", "ignore").decode("utf-8")
+                cv_metni += sayfa.extract_text() or ""
 
-            is_ascii = is_tanimi.encode("utf-8", "ignore").decode("utf-8")
-            komut = f"Job Description: {is_ascii}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis report with compatibility score, strengths, weaknesses and suggestions."
+            komut = f"Job Description: {is_tanimi}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis report with compatibility score, strengths, weaknesses and suggestions."
 
-            cevap = client.chat.completions.create(
-                model="meta-llama/llama-3.3-70b-instruct",
-                messages=[{"role": "user", "content": komut}],
-                max_tokens=1000
+            headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+            payload = {
+                "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+                "messages": [{"role": "user", "content": komut}],
+                "max_tokens": 1000
+            }
+
+            response = requests.post(
+                "https://api-inference.huggingface.co/v1/chat/completions",
+                headers=headers,
+                json=payload
             )
 
+            result = response.json()
             st.success("Analiz Tamamlandi!")
             st.markdown("### Analiz Raporu")
-            st.write(cevap.choices[0].message.content)
+            st.write(result["choices"][0]["message"]["content"])
 
         except Exception as e:
             st.error(f"Hata: {e}")
