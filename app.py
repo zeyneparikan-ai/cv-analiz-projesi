@@ -7,10 +7,7 @@ st.set_page_config(page_title="CV Analiz Projesi", page_icon="📄", layout="cen
 st.title("📄 Yapay Zeka Destekli CV Analiz Assistanı")
 
 # --- KULLANICI GİRDİLERİ ---
-# İş tanımı alanı
 is_tanimi = st.text_area("İş Tanımını (Job Description) Buraya Yapıştırın:", height=150)
-
-# PDF Yükleme alanı
 yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin:", type=["pdf"])
 
 # --- ANALİZ SÜRECİ ---
@@ -28,25 +25,28 @@ if yuklenen_dosya and is_tanimi:
                 # 2. Prompt (Komut) Hazırlama
                 komut = f"Job Description: {is_tanimi}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis"
                 
-                # 3. API Payload ve Header Yapılandırması
+                # 3. API Payload Yapılandırması
                 payload = {
                     "model": "meta-llama/Meta-Llama-3-8B-Instruct",
                     "messages": [{"role": "user", "content": komut}],
                     "max_tokens": 1000
                 }
                 
+                # 4. API Anahtarı Temizliği (Latin-1/Türkçe karakter hatasını önlemek için)
+                hf_token = str(st.secrets["HF_TOKEN"]).strip()
+                
                 headers = {
-                    "Authorization": f"Bearer {st.secrets['HF_TOKEN']}"
+                    "Authorization": f"Bearer {hf_token}"
                 }
                 
-                # 4. Hugging Face Router API İsteği
+                # 5. Hugging Face Router API İsteği
                 response = requests.post(
                     "https://router.huggingface.co/v1/chat/completions",
                     headers=headers,
-                    json=payload  # requests kütüphanesi json dönüşümünü otomatik halleder
+                    json=payload  # Veriyi güvenli JSON formatında gönderiyoruz
                 )
                 
-                # 5. Yanıtı Ekrana Yazdırma
+                # 6. Yanıtı Ekrana Yazdırma
                 if response.status_code == 200:
                     sonuc = response.json()
                     analiz_metni = sonuc["choices"][0]["message"]["content"]
