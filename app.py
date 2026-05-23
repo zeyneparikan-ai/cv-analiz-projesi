@@ -44,10 +44,10 @@ Lütfen şu formatta bir analiz raporu çıkar:
 """
                 
                 # KÖKDEN ÇÖZÜM: API Sürümünü v1'e (Stabil) zorlayarak modeli başlatıyoruz
-                model = genai.GenerativeModel(
-                    model_name='models/gemini-1.5-flash',
-                    api_version='v1'
-                )
+            os.environ["DEFAULT_API_VERSION"] = "v1"
+                    model = genai.GenerativeModel("models/gemini-1.5-flash")',
+                
+                
                 
                 cevap = model.generate_content(komut)
                 
