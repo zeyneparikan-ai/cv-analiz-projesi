@@ -28,7 +28,7 @@ if st.button("CV'yi Analiz Et ✨"):
             for sayfa in pdf_okuyucu.pages:
                 cv_metni += sayfa.extract_text() or ""
 
-            komut = f"İş Tanımı: {is_tanimi}\n\nCV Metni: {cv_metni}\n\nYukarıdaki bilgilere göre bir CV analiz raporu oluştur. Uygunluk skoru, güçlü yönler, eksik yönler ve gelişim tavsiyelerini açıkla."
+            komut = f"Is Tanimi: {is_tanimi}\n\nCV Metni: {cv_metni}\n\nYukarıdaki bilgilere göre bir CV analiz raporu oluştur. Uygunluk skoru, güçlü yönler, eksik yönler ve gelişim tavsiyelerini açıkla."
 
             cevap = client.chat.completions.create(
                 model="meta-llama/llama-3.3-70b-instruct",
