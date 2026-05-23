@@ -1,6 +1,5 @@
 import streamlit as st
-import requests
-import json
+import google.generativeai as genai
 from pypdf import PdfReader
 
 # Başlık
@@ -14,11 +13,11 @@ yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin", type=["pd
 if st.button("CV'yi Analiz Et ✨"):
     if is_tanimi and yuklenen_dosya:
         try:
-            # Secrets kontrolü
+            # Secrets kontrolü ve API Yapılandırması
             if "GEMINI_API_KEY" not in st.secrets:
                 st.error("API Anahtarı bulunamadı! Lütfen Streamlit Secrets kısmını kontrol edin.")
             else:
-                api_key = st.secrets["GEMINI_API_KEY"]
+                genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
                 
                 # PDF okuma
                 pdf_okuyucu = PdfReader(yuklenen_dosya)
@@ -40,26 +39,15 @@ if st.button("CV'yi Analiz Et ✨"):
                 4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
                 """
                 
-                # Doğrudan HTTP Request ile Gemini Çağırma (Kütüphanesiz)
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={api_key}"
-                headers = {'Content-Type': 'application/json'}
-                data = {"contents": [{"parts": [{"text": komut}]}]}
+                # Resmi güncel kütüphane çağrısı
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                cevap = model.generate_content(komut)
                 
-                response = requests.post(url, headers=headers, json=data)
-                
-                if response.status_code == 200:
-                    cevap_json = response.json()
-                    analiz_sonucu = cevap_json['candidates'][0]['content']['parts'][0]['text']
-                    
-                    st.success("Analiz Tamamlandı!")
-                    st.markdown("### 📋 Yapay Zeka Analiz Raporu")
-                    st.write(analiz_sonucu)
-                else:
-                    st.error(f"Google API Hatası: {response.status_code} - {response.text}")
+                st.success("Analiz Tamamlandı!")
+                st.markdown("### 📋 Yapay Zeka Analiz Raporu")
+                st.write(cevap.text)
                     
         except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
     else:
         st.warning("Lütfen hem iş tanımını girin hem de CV'nizi yükleyin!")
-
-
