@@ -45,7 +45,7 @@ if str.button("CV'yi Analiz Et ✨"):
                 """
                 
                 # Modeli çağırma ve çalıştırma
-                model = genai.GenerativeModel('models/gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-pro')
                 cevap = model.generate_content(komut)
                 
                 # Sonucu ekrana yazdırma
