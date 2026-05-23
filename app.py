@@ -10,7 +10,7 @@ is_tanimi = st.text_area("Is Tanimi:")
 yuklenen_dosya = st.file_uploader("CV'nizi PDF olarak yukleyin", type=["pdf"])
 
 if st.button("Analiz Et"):
-    if is_tanimi and yuklened_dosya:
+    if is_tanimi and yuklenen_dosya:
         try:
             if "HF_TOKEN" not in st.secrets:
                 st.error("API Anahtari bulunamadi!")
