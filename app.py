@@ -25,7 +25,7 @@ if st.button("Analiz Et"):
             cv_metni = ""
             for sayfa in pdf_okuyucu.pages:
                 metin = sayfa.extract_text() or ""
-                cv_metni += metin.encode("ascii", "ignore").decode("ascii")
+                cv_metni += metin.encode("utf-8", "ignore").decode("utf-8")
 
             is_ascii = is_tanimi.encode("ascii", "ignore").decode("ascii")
             komut = f"Job Description: {is_ascii}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis report with compatibility score, strengths, weaknesses and suggestions."
