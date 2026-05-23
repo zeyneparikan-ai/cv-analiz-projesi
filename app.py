@@ -45,8 +45,7 @@ Lütfen şu formatta bir analiz raporu çıkar:
             
             # 4. Modeli Başlatma ve Yanıt Alma
             model = genai.GenerativeModel(
-                model_name='models/gemini-1.5-flash',
-                generation_config={"api_version": "v1beta"}
+                model_name='models/gemini-1.5-flash'
             )
             
             cevap = model.generate_content(komut)
@@ -55,7 +54,7 @@ Lütfen şu formatta bir analiz raporu çıkar:
             st.markdown("### 📄 Yapay Zeka Analiz Raporu")
             st.write(cevap.text)
             
-        except Exception as e:
+            except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
     else:
         st.warning("Lütfen hem iş tanımını girin hem de CV'nizi yükleyin!")
