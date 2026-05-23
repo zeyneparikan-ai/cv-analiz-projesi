@@ -20,6 +20,7 @@ if st.button("CV'yi Analiz Et ✨"):
             client = InferenceClient(
                 provider="novita",
                 api_key=st.secrets["HF_TOKEN"]
+                headers={"Content-Type": "application/json; charset=utf-8"}
             )
 
             pdf_okuyucu = PdfReader(yuklenen_dosya)
