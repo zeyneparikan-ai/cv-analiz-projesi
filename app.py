@@ -1,38 +1,34 @@
-import streamlit as str
-import google.generativeai as genai
-import pypdf
-import os
-# 1. YAPAY ZEKA AYARI
-# Alttaki tırnak işaretlerinin içine kendi aldığın API anahtarını yapıştır!
-API_KEY = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=API_KEY)
+import streamlit as st
+import requests
+import json
+from pypdf import PdfReader
 
-# 2. WEB SİTESİNİN BAŞLIĞI VE TASARIMI
-str.set_page_config(page_title="AI Resume Analyzer", layout="centered")
-str.title("🤖 Yapay Zeka Destekli CV Analizörü")
-str.write("CV'nizi yükleyin ve hedeflediğiniz işe ne kadar uygun olduğunuzu yapay zeka analiz etsin!")
+# Başlık
+st.title("🤖 Yapay Zeka Destekli CV Analizörü")
+st.write("CV'nizi yükleyin ve hedeflediğiniz işe ne kadar uygun olduğunuzu yapay zeka analiz etsin!")
 
-# 3. İŞ TANIMI GİRİŞ ALANI
-is_tanimi = str.text_area("Hedeflediğiniz Pozisyonun Açıklaması / İş Tanımı:", placeholder="Örn: Python bilen, veri analitiği yapabilen stajyer aranıyor...")
+# Kullanıcı Girişleri
+is_tanimi = st.text_area("Hedeflediğiniz Pozisyonun Açıklaması / İş Tanımı:")
+yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin", type=["pdf"])
 
-# 4. DOSYA YÜKLEME ALANI
-yuklenen_dosya = str.file_uploader("CV'nizi PDF formatında yükleyin", type=["pdf"])
-
-# 5. İŞLEM BUTONU VE ARKA PLAN PLANI
-if str.button("CV'yi Analiz Et ✨"):
-    if yuklenen_dosya is not None and is_tanimi != "":
-        with str.spinner("Yapay zeka CV'nizi inceliyor, lütfen bekleyin..."):
-            try:
-                # PDF dosyasındaki metinleri okuma
-                pdf_okuyucu = pypdf.PdfReader(yuklenen_dosya)
+if st.button("CV'yi Analiz Et ✨"):
+    if is_tanimi and yuklenen_dosya:
+        try:
+            # Secrets kontrolü
+            if "GEMINI_API_KEY" not in st.secrets:
+                st.error("API Anahtarı bulunamadı! Lütfen Streamlit Secrets kısmını kontrol edin.")
+            else:
+                api_key = st.secrets["GEMINI_API_KEY"]
+                
+                # PDF okuma
+                pdf_okuyucu = PdfReader(yuklenen_dosya)
                 cv_metni = ""
                 for sayfa in pdf_okuyucu.pages:
-                    cv_metni += sayfa.extract_text()
+                    cv_metni += sayfa.extract_text() or ""
                 
-                # Yapay zekaya gönderilecek komut (Prompt)
+                # API için komut hazırlama
                 komut = f"""
-                Sen profesyonel bir İnsan Kaynakları (İK) yapay zeka asistanısın. 
-                Aşağıdaki CV metnini, verilen İş Tanımı ile kıyasla.
+                Aşağıdaki iş tanımı ile CV metnini karşılaştır ve detaylı bir analiz raporu çıkar.
                 
                 İş Tanımı: {is_tanimi}
                 CV Metni: {cv_metni}
@@ -40,22 +36,30 @@ if str.button("CV'yi Analiz Et ✨"):
                 Lütfen şu formatta bir analiz raporu çıkar:
                 1. Uygunluk Skoru: (100 üzerinden bir puan ver)
                 2. Güçlü Yönler: (Adayın bu işe uyan en iyi 3 özelliği)
-                3. Eksik Yönler: (Adayın bu iş için geliştirmesi gereken veya CV'de eksik olan yönler)
+                3. Eksik Yönler: (Adayın bu iş için geliştirmesi gereken veya CV'de eksik olan noktalar)
                 4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
                 """
                 
-                # Modeli çağırma ve çalıştırma
-                model = genai.GenerativeModel('gemini-pro')
-                cevap = model.generate_content(komut)
+                # Doğrudan HTTP Request ile Gemini Çağırma (Kütüphanesiz)
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+                headers = {'Content-Type': 'application/json'}
+                data = {"contents": [{"parts": [{"text": komut}]}]}
                 
-                # Sonucu ekrana yazdırma
-                str.success("Analiz Tamamlandı!")
-                str.markdown("### 📋 Yapay Zeka Analiz Raporu")
-                str.write(cevap.text)
+                response = requests.post(url, headers=headers, json=data)
                 
-            except Exception as e:
-                str.error(f"Bir hata oluştu: {e}")
+                if response.status_code == 200:
+                    cevap_json = response.json()
+                    analiz_sonucu = cevap_json['candidates'][0]['content']['parts'][0]['text']
+                    
+                    st.success("Analiz Tamamlandı!")
+                    st.markdown("### 📋 Yapay Zeka Analiz Raporu")
+                    st.write(analiz_sonucu)
+                else:
+                    st.error(f"Google API Hatası: {response.status_code} - {response.text}")
+                    
+        except Exception as e:
+            st.error(f"Bir hata oluştu: {e}")
     else:
-        str.warning("Lütfen hem iş tanımını girin hem de CV'nizi yükleyin!")
+        st.warning("Lütfen hem iş tanımını girin hem de CV'nizi yükleyin!")
 
 
