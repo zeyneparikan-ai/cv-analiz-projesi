@@ -43,7 +43,7 @@ if st.button("CV'yi Analiz Et ✨"):
                 """
                 
                 # Google'ın en kararlı çalışan güncel model çağrısı
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
                 cevap = model.generate_content(komut)
                 
                 st.success("Analiz Tamamlandı!")
