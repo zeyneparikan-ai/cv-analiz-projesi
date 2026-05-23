@@ -1,6 +1,6 @@
 import streamlit as st
 from pypdf import PdfReader
-from openai import OpenAI
+from huggingface_hub import InferenceClient
 
 st.set_page_config(page_title="Yapay Zeka Destekli CV Analizörü", layout="centered")
 
@@ -13,11 +13,14 @@ yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin", type=["pd
 if st.button("CV'yi Analiz Et ✨"):
     if is_tanimi and yuklenen_dosya:
         try:
-            if "OPENAI_API_KEY" not in st.secrets:
+            if "HF_TOKEN" not in st.secrets:
                 st.error("API Anahtarı bulunamadı!")
                 st.stop()
 
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            client = InferenceClient(
+                provider="novita",
+                api_key=st.secrets["HF_TOKEN"]
+            )
 
             pdf_okuyucu = PdfReader(yuklenen_dosya)
             cv_metni = ""
@@ -27,7 +30,7 @@ if st.button("CV'yi Analiz Et ✨"):
             komut = f"İş Tanımı: {is_tanimi}\n\nCV Metni: {cv_metni}\n\nYukarıdaki bilgilere göre bir CV analiz raporu oluştur. Uygunluk skoru, güçlü yönler, eksik yönler ve gelişim tavsiyelerini açıkla."
 
             cevap = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="meta-llama/llama-3.3-70b-instruct",
                 messages=[{"role": "user", "content": komut}],
                 max_tokens=1000
             )
