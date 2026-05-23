@@ -2,9 +2,11 @@ import streamlit as st
 import google.generativeai as genai
 from pypdf import PdfReader
 
-# Başlık
+# Sayfa Yapılandırması
+st.set_page_config(page_title="CV Analizörü", page_icon="🤖")
+
 st.title("🤖 Yapay Zeka Destekli CV Analizörü")
-st.write("CV'nizi yükleyin ve hedeflediğiniz işe ne kadar uygun olduğunuzu yapay zeka analiz etsin!")
+st.write("CV'nizi yükleyin ve hedeflediğiniz işe uygunluğunuzu analiz edin!")
 
 # Kullanıcı Girişleri
 is_tanimi = st.text_area("Hedeflediğiniz Pozisyonun Açıklaması / İş Tanımı:")
@@ -17,15 +19,16 @@ if st.button("CV'yi Analiz Et ✨"):
             if "GEMINI_API_KEY" not in st.secrets:
                 st.error("API Anahtarı bulunamadı! Lütfen Streamlit Secrets kısmını kontrol edin.")
             else:
+                # En güncel yapılandırma metodu
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
                 
-                # PDF okuma
+                # PDF okuma işlemi
                 pdf_okuyucu = PdfReader(yuklenen_dosya)
                 cv_metni = ""
                 for sayfa in pdf_okuyucu.pages:
                     cv_metni += sayfa.extract_text() or ""
                 
-                # API için komut hazırlama
+                # Prompt hazırlama
                 komut = f"""
                 Aşağıdaki iş tanımı ile CV metnini karşılaştır ve detaylı bir analiz raporu çıkar.
                 
@@ -39,7 +42,7 @@ if st.button("CV'yi Analiz Et ✨"):
                 4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
                 """
                 
-                # Resmi güncel kütüphane çağrısı
+                # Google'ın en kararlı çalışan güncel model çağrısı
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 cevap = model.generate_content(komut)
                 
