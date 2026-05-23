@@ -2,15 +2,14 @@ import streamlit as st
 from pypdf import PdfReader
 from huggingface_hub import InferenceClient
 
-st.set_page_config(page_title="Yapay Zeka Destekli CV Analizoru", layout="centered")
-
+st.set_page_config(page_title="CV Analizoru", layout="centered")
 st.title("Yapay Zeka Destekli CV Analizoru")
-st.write("CV'nizi yukleyin ve hedeflediginiz ise uygunlugunuzu analiz edin!")
+st.write("CV'nizi yukleyin ve ise uygunlugunuzu analiz edin!")
 
-is_tanimi = st.text_area("Hedeflediginiz Pozisyonun Aciklamasi / Is Tanimi:")
-yuklenen_dosya = st.file_uploader("CV'nizi PDF formatinda yukleyin", type=["pdf"])
+is_tanimi = st.text_area("Is Tanimi:")
+yuklenen_dosya = st.file_uploader("CV'nizi PDF olarak yukleyin", type=["pdf"])
 
-if st.button("CV'yi Analiz Et"):
+if st.button("Analiz Et"):
     if is_tanimi and yuklenen_dosya:
         try:
             if "HF_TOKEN" not in st.secrets:
@@ -28,9 +27,8 @@ if st.button("CV'yi Analiz Et"):
                 metin = sayfa.extract_text() or ""
                 cv_metni += metin.encode("ascii", "ignore").decode("ascii")
 
-            is_tanimi_ascii = is_tanimi.encode("ascii", "ignore").decode("ascii")
-
-            komut = f"Job Description: {is_tanimi_ascii}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis report. Include compatibility score, strengths, weaknesses and improvement suggestions."
+            is_ascii = is_tanimi.encode("ascii", "ignore").decode("ascii")
+            komut = f"Job Description: {is_ascii}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis report with compatibility score, strengths, weaknesses and suggestions."
 
             cevap = client.chat.completions.create(
                 model="meta-llama/llama-3.3-70b-instruct",
@@ -39,3 +37,10 @@ if st.button("CV'yi Analiz Et"):
             )
 
             st.success("Analiz Tamamlandi!")
+            st.markdown("### Analiz Raporu")
+            st.write(cevap.choices[0].message.content)
+
+        except Exception as e:
+            st.error(f"Hata: {e}")
+    else:
+        st.warning("Is tanimini girin ve CV yukleyin!")
