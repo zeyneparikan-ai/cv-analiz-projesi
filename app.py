@@ -1,7 +1,7 @@
 import streamlit as str
 import google.generativeai as genai
 import pypdf
-
+import os
 # 1. YAPAY ZEKA AYARI
 # Alttaki tırnak işaretlerinin içine kendi aldığın API anahtarını yapıştır!
 API_KEY = os.environ.get("GEMINI_API_KEY")
