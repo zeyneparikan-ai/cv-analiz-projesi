@@ -4,7 +4,7 @@ import pypdf
 
 # 1. YAPAY ZEKA AYARI
 # Alttaki tırnak işaretlerinin içine kendi aldığın API anahtarını yapıştır!
-API_KEY = "AIzaSyD9Ve3JUkTAx4T60G1upoMTrjf9NL3Ahyg"
+API_KEY = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
 # 2. WEB SİTESİNİN BAŞLIĞI VE TASARIMI
