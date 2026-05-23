@@ -16,7 +16,7 @@ if st.button("Analiz Et"):
                 st.error("API Anahtari bulunamadi!")
                 st.stop()
 
-            pdf_okuyucu = PdfReader(yuklened_dosya)
+            pdf_okuyucu = PdfReader(yuklenen_dosya)
             cv_metni = ""
             for sayfa in pdf_okuyucu.pages:
                 cv_metni += sayfa.extract_text() or ""
