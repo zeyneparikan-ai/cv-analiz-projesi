@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from pypdf import PdfReader
+import os
 
 # Sayfa Yapılandırması
 st.set_page_config(page_title="CV Analizörü", page_icon="🤖")
@@ -30,26 +31,30 @@ if st.button("CV'yi Analiz Et ✨"):
                 
                 # Prompt hazırlama
                 komut = f"""
-                Aşağıdaki iş tanımı ile CV metnini karşılaştır ve detaylı bir analiz raporu çıkar.
+Aşağıdaki iş tanımı ile CV metnini karşılaştır ve detaylı bir analiz raporu çıkar.
+
+İş Tanımı: {is_tanimi}
+CV Metni: {cv_metni}
+
+Lütfen şu formatta bir analiz raporu çıkar:
+1. Uygunluk Skoru: (100 üzerinden bir puan ver)
+2. Güçlü Yönler: (Adayın bu işe uyan en iyi 3 özelliği)
+3. Eksik Yönler: (Adayın bu iş için geliştirmesi gereken veya CV'de eksik olan noktalar)
+4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
+"""
                 
-                İş Tanımı: {is_tanimi}
-                CV Metni: {cv_metni}
+                # KÖKDEN ÇÖZÜM: API Sürümünü v1'e (Stabil) zorlayarak modeli başlatıyoruz
+                model = genai.GenerativeModel(
+                    model_name='models/gemini-1.5-flash',
+                    api_version='v1'
+                )
                 
-                Lütfen şu formatta bir analiz raporu çıkar:
-                1. Uygunluk Skoru: (100 üzerinden bir puan ver)
-                2. Güçlü Yönler: (Adayın bu işe uyan en iyi 3 özelliği)
-                3. Eksik Yönler: (Adayın bu iş için geliştirmesi gereken veya CV'de eksik olan noktalar)
-                4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
-                """
-                
-                # Google'ın en kararlı çalışan güncel model çağrısı
-                model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
                 cevap = model.generate_content(komut)
                 
                 st.success("Analiz Tamamlandı!")
-                st.markdown("### 📋 Yapay Zeka Analiz Raporu")
+                st.markdown("### 📝 Yapay Zeka Analiz Raporu")
                 st.write(cevap.text)
-                    
+                
         except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
     else:
