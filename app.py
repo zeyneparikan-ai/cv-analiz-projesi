@@ -31,7 +31,7 @@ if st.button("Analiz Et"):
             }
 
             response = requests.post(
-                "https://api-inference.huggingface.co/v1/chat/completions",
+                "https://router.huggingface.co/v1/chat/completions",
                 headers=headers,
                 json=payload
             )
