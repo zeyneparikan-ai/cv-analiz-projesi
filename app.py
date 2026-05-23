@@ -45,7 +45,7 @@ Lütfen şu formatta bir analiz raporu çıkar:
                 
                 # KÖKDEN ÇÖZÜM: API Sürümünü v1'e (Stabil) zorlayarak modeli başlatıyoruz
             os.environ["DEFAULT_API_VERSION"] = "v1"
-                    model = genai.GenerativeModel("models/gemini-1.5-flash")',
+                    model = genai.GenerativeModel("models/gemini-1.5-flash")'
                 
                 
                 
