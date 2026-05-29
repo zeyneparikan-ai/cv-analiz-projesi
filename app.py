@@ -1,71 +1,61 @@
-import streamlit as st
-import requests
-from pypdf import PdfReader
+import streamlit as str
+import google.generativeai as genai
+import pypdf
 
-# --- SAYFA AYARLARI VE BAŞLIK ---
-st.set_page_config(page_title="CV Analiz Projesi", page_icon="📄", layout="centered")
-st.title("📄 Yapay Zeka Destekli CV Analiz Assistanı")
+# 1. YAPAY ZEKA AYARI
+# Alttaki tırnak işaretlerinin içine kendi aldığın API anahtarını yapıştır!
+API_KEY = "AIzaSyD9Ve3JUkTAx4T60G1upoMTrjf9NL3Ahyg"
+genai.configure(api_key=API_KEY)
 
-# --- KULLANICI GİRDİLERİ ---
-is_tanimi = st.text_area("İş Tanımını (Job Description) Buraya Yapıştırın:", height=150)
-yuklenen_dosya = st.file_uploader("CV'nizi PDF formatında yükleyin:", type=["pdf"])
+# 2. WEB SİTESİNİN BAŞLIĞI VE TASARIMI
+str.set_page_config(page_title="AI Resume Analyzer", layout="centered")
+str.title("🤖 Yapay Zeka Destekli CV Analizörü")
+str.write("CV'nizi yükleyin ve hedeflediğiniz işe ne kadar uygun olduğunuzu yapay zeka analiz etsin!")
 
-# --- ANALİZ SÜRECİ ---
-if yuklenen_dosya and is_tanimi:
-    if st.button("CV'yi Analiz Et"):
-        with st.spinner("CV okunuyor ve analiz ediliyor..."):
+# 3. İŞ TANIMI GİRİŞ ALANI
+is_tanimi = str.text_area("Hedeflediğiniz Pozisyonun Açıklaması / İş Tanımı:", placeholder="Örn: Python bilen, veri analitiği yapabilen stajyer aranıyor...")
+
+# 4. DOSYA YÜKLEME ALANI
+yuklenen_dosya = str.file_uploader("CV'nizi PDF formatında yükleyin", type=["pdf"])
+
+# 5. İŞLEM BUTONU VE ARKA PLAN PLANI
+if str.button("CV'yi Analiz Et ✨"):
+    if yuklenen_dosya is not None and is_tanimi != "":
+        with str.spinner("Yapay zeka CV'nizi inceliyor, lütfen bekleyin..."):
             try:
-                # 1. PDF Okuma İşlemi
-                pdf_okuyucu = PdfReader(yuklenen_dosya)
+                # PDF dosyasındaki metinleri okuma
+                pdf_okuyucu = pypdf.PdfReader(yuklenen_dosya)
                 cv_metni = ""
                 for sayfa in pdf_okuyucu.pages:
-                    metin = sayfa.extract_text() or ""
-                    cv_metni += metin + "\n"
+                    cv_metni += sayfa.extract_text()
                 
-                # Karakter encoding sorunlarını önlemek için güvenli temizlik
-                cv_metni = cv_metni.encode("utf-8", errors="ignore").decode("utf-8")
-                is_tanimi_temiz = is_tanimi.encode("utf-8", errors="ignore").decode("utf-8")
+                # Yapay zekaya gönderilecek komut (Prompt)
+                komut = f"""
+                Sen profesyonel bir İnsan Kaynakları (İK) yapay zeka asistanısın. 
+                Aşağıdaki CV metnini, verilen İş Tanımı ile kıyasla.
                 
-                # 2. Prompt (Komut) Hazırlama
-                komut = f"Job Description: {is_tanimi_temiz}\n\nCV Text: {cv_metni}\n\nCreate a CV analysis"
+                İş Tanımı: {is_tanimi}
+                CV Metni: {cv_metni}
                 
-                # 3. API Payload Yapılandırması
-                payload = {
-                    "model": "meta-llama/Meta-Llama-3-8B-Instruct",
-                    "messages": [{"role": "user", "content": komut}],
-                    "max_tokens": 1000
-                }
+                Lütfen şu formatta bir analiz raporu çıkar:
+                1. Uygunluk Skoru: (100 üzerinden bir puan ver)
+                2. Güçlü Yönler: (Adayın bu işe uyan en iyi 3 özelliği)
+                3. Eksik Yönler: (Adayın bu iş için geliştirmesi gereken veya CV'de eksik olan yönler)
+                4. Gelişim Tavsiyeleri: (Adaya kariyer tavsiyeleri)
+                """
                 
-                # 4. API Anahtarı Temizliği
-                hf_token = str(st.secrets["HF_TOKEN"]).strip()
-                # Token içindeki olası görünmez karakterleri ve tırnakları tamamen temizle
-                hf_token = hf_token.replace('"', '').replace("'", "")
+                # Modeli çağırma ve çalıştırma
+                model = genai.GenerativeModel('gemini-pro')
+                cevap = model.generate_content(komut)
                 
-                headers = {
-                    "Authorization": f"Bearer {hf_token}"
-                }
+                # Sonucu ekrana yazdırma
+                str.success("Analiz Tamamlandı!")
+                str.markdown("### 📋 Yapay Zeka Analiz Raporu")
+                str.write(cevap.text)
                 
-                # 5. Hugging Face Router API İsteği
-                response = requests.post(
-                    "https://router.huggingface.co/v1/chat/completions",
-                    headers=headers,
-                    json=payload
-                )
-                
-                # 6. Yanıtı Ekrana Yazdırma
-                if response.status_code == 200:
-                    sonuc = response.json()
-                    analiz_metni = sonuc["choices"][0]["message"]["content"]
-                    
-                    st.success("Analiz Başarıyla Tamamlandı!")
-                    st.subheader("📊 Analiz Sonuçları")
-                    st.write(analiz_metni)
-                else:
-                    st.error(f"API Hatası Oluştu! Kod: {response.status_code}")
-                    st.error(response.text)
-                    
             except Exception as e:
-                st.error(f"Bir hata meydana geldi: {e}")
+                str.error(f"Bir hata oluştu: {e}")
+    else:
+        str.warning("Lütfen hem iş tanımını girin hem de CV'nizi yükleyin!")
 
-else:
-    st.info("Lütfen analize başlamak için hem iş tanımını girin hem de CV'nizi yükleyin.")
+
